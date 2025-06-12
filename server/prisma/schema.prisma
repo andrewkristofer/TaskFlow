@@ -1,0 +1,48 @@
+// server/prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       Int     @id @default(autoincrement())
+  email    String  @unique
+  password String
+  boards   Board[] @relation("UserBoards")
+}
+
+model Board {
+  id        Int      @id @default(autoincrement())
+  name      String
+  userId    Int
+  user      User     @relation("UserBoards", fields: [userId], references: [id])
+  // CORRECTED LINE: Removed @relation(onDelete: Cascade)
+  columns   Column[]
+  createdAt DateTime @default(now())
+}
+
+model Column {
+  id      Int    @id @default(autoincrement())
+  name    String
+  boardId Int
+  // This line is correct, as it's on the side with the foreign key
+  board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  // CORRECTED LINE: Removed @relation(onDelete: Cascade)
+  tasks   Task[]
+}
+
+model Task {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  columnId    Int
+  // This line is correct, as it's on the side with the foreign key
+  column      Column   @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  order       Int      @default(0)
+}
